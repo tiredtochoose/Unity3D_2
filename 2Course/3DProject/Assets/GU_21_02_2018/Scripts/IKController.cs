@@ -5,80 +5,44 @@ using UnityEngine;
 [RequireComponent(typeof(Animator))]
 
 public class IKController : MonoBehaviour {
-
-    private Animator _animator;
-    private Transform _footR;
-    private Transform _footL;
-
-    private float _weightFootR;
-    private float _weightFootL;
-
-    private Vector3 _rFootPos;
-    private Vector3 _lFootPos;
-
-    private Quaternion _rFootRot;
-    private Quaternion _lFootRot;
-
-    [SerializeField] private float _rayLength;
-    [SerializeField] private LayerMask _rayLayer;
-
-    private float _smoothness = 0.5f;
-
-
-
-    //private Animator _animator;
-    //[SerializeField] private bool _isActive;
-    //[SerializeField] private Transform _obj1;
-    //[SerializeField] private Transform _obj2;
-
-    private void OnValidate()
+    protected Animator animator;
+    public bool ikActive = false;
+    public Transform rightHandObj = null;
+    public Transform lookObj = null;
+    void Start()
     {
-        _animator = GetComponent<Animator>();
-
-        _footR = _animator.GetBoneTransform(HumanBodyBones.RightFoot);
-        _footL = _animator.GetBoneTransform(HumanBodyBones.LeftFoot);
-
+        animator = GetComponent<Animator>();
     }
-
-    private void Update()
+    //Вызывается при расчёте IK
+    void OnAnimatorIK()
     {
-        RaycastHit rightHit;
-        RaycastHit leftHit;
-
-        var rPos = _footR.TransformPoint(Vector3.zero);
-        var lPos = _footL.TransformPoint(Vector3.zero);
-
-        if (Physics.Raycast(rPos, Vector3.down, out rightHit,
-            _rayLength, _rayLayer))
+        if (animator)
         {
-            _rFootPos = Vector3.Lerp(_footR.position,
-                rightHit.point, _smoothness);
+            //Если, мы включили IK, устанавливаем позицию и вращение
+            if (ikActive)
+            {
+                // Устанавливаем цель взгляда для головы
+                if (lookObj != null)
+                {
+                    animator.SetLookAtWeight(1);
+                    animator.SetLookAtPosition(lookObj.position);
+                }
+                // Устанавливаем цель для правой руки и выставляем её в позицию
+                if (rightHandObj != null)
+                {
+                    animator.SetIKPositionWeight(AvatarIKGoal.RightHand, 1);
+                    animator.SetIKRotationWeight(AvatarIKGoal.RightHand, 1);
+                    animator.SetIKPosition(AvatarIKGoal.RightHand, rightHandObj.position);
+                    animator.SetIKRotation(AvatarIKGoal.RightHand, rightHandObj.rotation);
+                }
+            }
+            // Если IK неактивен, ставим позицию и вращение рук и головы в изначальное положение
+            else
+            {
+                animator.SetIKPositionWeight(AvatarIKGoal.RightHand, 0);
+                animator.SetIKRotationWeight(AvatarIKGoal.RightHand, 0);
+                animator.SetLookAtWeight(0);
+            }
         }
     }
-
-
-    private void OnAnimatorIK()
-    {
-        //if (!_isActive) return; 
-        //if (_obj1)
-        //{
-        //    _animator.SetLookAtWeight(1);
-        //    _animator.SetLookAtPosition(_obj1.position);
-        //}
-
-        //if (_obj2)
-        //{
-        //    _animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1);
-        //    _animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 1);
-
-        //    _animator.SetIKPosition(AvatarIKGoal.LeftHand, _obj2.position);
-        //    _animator.SetIKRotation(AvatarIKGoal.LeftHand, _obj2.rotation);
-
-
-        //}
-    }
-
-   
-
-
 }
